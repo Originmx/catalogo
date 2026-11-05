@@ -3,9 +3,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ORIGIN | Mezclilla de marca hecha en México</title>
-<meta name="description" content="Same origin. Different price. Joe's y Frame hechos en México. Elige tu talla y aparta por WhatsApp o Instagram.">
+<meta name="description" content="Same origin, different price. Joe's y Frame hechos en México. Elige tu talla y aparta por WhatsApp o Instagram.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="ORIGIN | Same origin. Different price.">
+<meta property="og:title" content="ORIGIN | Same origin, different price.">
 <meta property="og:description" content="Mezclilla de marca hecha en México. Elige tu talla y aparta por WhatsApp o Instagram.">
 <meta property="og:image" content="https://originmexico.mx/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -16,18 +16,13 @@
 <style>
 /* Concepto: etiqueta de taller de maquila. Fondo de papel frío, tinta índigo, hilván cobre como único acento. */
 :root{
-  --bg:#edf0f4; --card:#ffffff; --ink:#16233f; --muted:#5b6780; --line:#d3d9e3;
-  --stitch:#c9b28d; --stitch-ink:#16233f; --stitch-text:#7a6340; --chip:#e3e8f0; --soft:#f6f8fb;
+  --bg:#000; --card:#0e0e0e; --ink:#f2f2f2; --muted:#a6a6a6; --line:#2a2a2a;
+  --stitch:#d8c4a2; --stitch-ink:#1a1206; --stitch-text:#d8c4a2; --chip:#1c1c1c; --soft:#161616;
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
   --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1626; --card:#18223a; --ink:#e8edf6; --muted:#9aa7c0; --line:#2b3857;
-  --stitch:#d8c4a2; --stitch-ink:#1a1206; --stitch-text:#d8c4a2; --chip:#243152; --soft:#131c31; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0f1626; --card:#18223a; --ink:#e8edf6; --muted:#9aa7c0; --line:#2b3857;
-  --stitch:#d8c4a2; --stitch-ink:#1a1206; --stitch-text:#d8c4a2; --chip:#243152; --soft:#131c31; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
   padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -99,7 +94,7 @@ body{padding-bottom:96px}
 /* ===== Marca ORIGIN ===== */
 html{-webkit-text-size-adjust:100%}
 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-header{background:#000;color:#fff;border:0;border-radius:8px;padding:28px 24px 24px;gap:14px;align-items:flex-start}
+header{background:transparent;color:#fff;border-bottom:2px dashed var(--stitch);padding:8px 0 24px;gap:14px;align-items:flex-start}
 .logo{display:block;width:min(78%,380px);height:auto}
 .slogan{font-family:var(--display);font-weight:700;font-size:clamp(20px,4.6vw,28px);letter-spacing:.06em;text-transform:uppercase;color:#d8c4a2;margin:0}
 header p{color:#c9ced8}
@@ -112,12 +107,11 @@ header p.lead{font-size:16px}
 .copy{min-height:48px}
 .foot{flex-wrap:wrap}
 footer{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;padding-top:18px;border-top:2px dashed var(--stitch);color:var(--muted);font-size:13px}
-footer img{width:110px;height:auto;filter:invert(1)}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) footer img{filter:none}}
+footer img{width:110px;height:auto}
 @media (max-width:640px){
   body{font-size:16px;padding-top:14px}
   .wrap{gap:18px}
-  header{padding:22px 18px 20px}
+  header{padding:6px 0 20px}
   .logo{width:min(82%,320px)}
   .grid{grid-template-columns:1fr;gap:20px}
   .body{padding:16px 16px 18px;gap:14px}
@@ -146,8 +140,8 @@ footer img{width:110px;height:auto;filter:invert(1)}
   <header>
     <h1 class="sr">ORIGIN: mezclilla de marca, hecha en México</h1>
     <img class="logo" src="logo.png" alt="ORIGIN" width="900" height="216">
-    <p class="slogan">Same origin. Different price.</p>
-    <p class="lead">Mezclilla de marca hecha en México. Joe's y Frame directo de maquila. Elige tu talla, agrega tus pantalones al carrito y copia el mensaje para apartarlos por WhatsApp o Instagram.</p>
+    <p class="slogan">Same origin, different price.</p>
+    <p class="lead">Mezclilla de marca hecha en México. Elige tu talla, agrega tus pantalones al carrito y copia el mensaje para apartarlos por WhatsApp o Instagram.</p>
   </header>
 
   <div class="bar">
@@ -161,7 +155,7 @@ footer img{width:110px;height:auto;filter:invert(1)}
 
   <div class="grid" id="grid"></div>
   <p class="note">Fotos de referencia de las tiendas oficiales de cada marca. Toca una miniatura para ver otro ángulo. Elige tu talla, agrégala al carrito y copia el mensaje para apartarla.</p>
-  <footer><img src="logo.png" alt="ORIGIN" width="900" height="216"><span>Same origin. Different price.</span></footer>
+  <footer><img src="logo.png" alt="ORIGIN" width="900" height="216"><span>Same origin, different price.</span></footer>
 </div>
 <div class="cartbar" id="cartbar" hidden><button type="button" id="openCart" class="copy">Ver carrito (<span id="cartN">0</span>)</button></div>
 <div class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="cartH">
