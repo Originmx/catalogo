@@ -133,6 +133,21 @@ footer img{width:110px;height:auto}
   .rm{min-height:44px;padding:8px 14px}
   .note{font-size:13px}
 }
+.photo .zoom{position:absolute;inset:0;width:100%;height:100%;padding:0;margin:0;border:0;background:transparent;cursor:zoom-in}
+.zb{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.72);color:#fff;font-size:13px;font-weight:600;padding:8px 12px;border-radius:999px;pointer-events:none}
+.photo .zoom:focus-visible{outline:3px solid var(--stitch);outline-offset:-3px}
+.lb{position:fixed;inset:0;z-index:30;background:#000;display:flex}
+.lb[hidden]{display:none}
+.lbs{position:absolute;inset:0;overflow:auto;display:flex;-webkit-overflow-scrolling:touch}
+.lbs img{display:block;margin:auto;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;background:#f2f2f2}
+.lb.z .lbs img{max-width:none;max-height:none;width:230%;height:auto;cursor:zoom-out}
+.lbx,.lbn{position:absolute;z-index:2;border:0;background:rgba(40,40,40,.85);color:#fff;border-radius:50%;width:52px;height:52px;font-size:26px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lbx{top:calc(14px + env(safe-area-inset-top,0px));right:14px}
+.lbn{top:50%;transform:translateY(-50%);font-size:34px;padding-bottom:4px}
+.lbp{left:10px}.lbnx{right:10px}
+.lbc{position:absolute;z-index:2;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:rgba(40,40,40,.85);color:#fff;font-family:var(--mono);font-size:14px;padding:6px 14px;border-radius:999px}
+.lbx:focus-visible,.lbn:focus-visible{outline:3px solid var(--stitch)}
+.lb.z .lbn{display:none}
 </style>
 </head><body>
 
@@ -165,6 +180,13 @@ footer img{width:110px;height:auto}
     <p class="hint">Copia el mensaje y pégalo en WhatsApp o Instagram para apartar tus pantalones.</p>
     <div class="acts"><button type="button" id="copyMsg" class="copy">Copiar mensaje</button><button type="button" id="clearCart" class="ghost">Vaciar</button><button type="button" id="closeCart" class="ghost">Cerrar</button></div>
   </div>
+</div>
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto ampliada">
+  <div class="lbs" id="lbStage"><img id="lbImg" alt=""></div>
+  <button type="button" class="lbx" id="lbClose" aria-label="Cerrar foto">&#10005;</button>
+  <button type="button" class="lbn lbp" id="lbPrev" aria-label="Foto anterior">&#8249;</button>
+  <button type="button" class="lbn lbnx" id="lbNext" aria-label="Foto siguiente">&#8250;</button>
+  <div class="lbc" id="lbCount" aria-live="polite"></div>
 </div>
 <div class="toast" id="toast" hidden role="status"></div>
 
@@ -209,7 +231,7 @@ function render(){
     const ix=P.indexOf(p);
     const sizes=Object.entries(p.s).map(([k,v])=>{const left=v-inCart(ix,k);return `<button type="button" class="sz" data-sz="${k}" aria-pressed="${String(sel[ix])===k}" ${left<=0?"disabled":""} aria-label="Talla ${k}, ${left<=0?"ya en tu carrito":left+(left>1?" piezas":" pieza")}"><b>${k}</b><span>${left<=0?"en carrito":left+(left>1?" pzas":" pza")}</span></button>`}).join("");
     return `<article data-i="${P.indexOf(p)}">
-      <div class="gal"><div class="photo"><img alt="Foto de ${esc(p.m)} lavado ${esc(p.w)}" src="${p.imgs[0]}" data-main></div>
+      <div class="gal"><div class="photo"><img alt="Foto de ${esc(p.m)} lavado ${esc(p.w)}" src="${p.imgs[0]}" data-main><button type="button" class="zoom" data-zoom aria-label="Ampliar foto de ${esc(p.m)}"><span class="zb">Ampliar</span></button></div>
         <div class="thumbs">${p.imgs.map((s,k)=>`<button type="button" class="th" data-th="${k}" aria-label="Ver foto ${k+1} de ${p.imgs.length}" aria-pressed="${k===0}"><img alt="" src="${s}"></button>`).join("")}</div></div>
       <div class="body">
         <div><div class="brand">${esc(p.b)}</div><h2>${esc(p.m)}</h2></div>
@@ -222,7 +244,22 @@ function render(){
 }
 function toast(t){const e=$("#toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2000)}
 function fallback(t){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}a.remove();return ok}
+const lb={i:0,k:0,from:null};
+function lbShow(){const p=P[lb.i];$("#lbImg").src=p.imgs[lb.k];$("#lbImg").alt="Foto "+(lb.k+1)+" de "+p.imgs.length+": "+p.m+" lavado "+p.w;$("#lbCount").textContent=(lb.k+1)+" / "+p.imgs.length;
+  const one=p.imgs.length<2;$("#lbPrev").hidden=one;$("#lbNext").hidden=one;$("#lb").classList.remove("z");$("#lbStage").scrollTo(0,0);}
+function lbOpen(i,k,from){lb.i=i;lb.k=k;lb.from=from;lbShow();$("#lb").hidden=false;document.body.style.overflow="hidden";$("#lbClose").focus();}
+function lbClose(){$("#lb").hidden=true;document.body.style.overflow="";if(lb.from&&lb.from.isConnected)lb.from.focus();}
+function lbStep(d){const n=P[lb.i].imgs.length;lb.k=(lb.k+d+n)%n;lbShow();}
+let tx=null;
+$("#lbStage").addEventListener("touchstart",e=>{tx=e.touches.length===1?e.touches[0].clientX:null},{passive:true});
+$("#lbStage").addEventListener("touchend",e=>{if(tx===null||$("#lb").classList.contains("z"))return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>60)lbStep(dx<0?1:-1)},{passive:true});
 document.addEventListener("click",e=>{
+  const zm=e.target.closest("[data-zoom]");
+  if(zm){const art=zm.closest("article");const on=art.querySelector("[data-th][aria-pressed=true]");lbOpen(Number(art.dataset.i),on?Number(on.dataset.th):0,zm);return;}
+  if(e.target.closest("#lbClose")){lbClose();return;}
+  if(e.target.closest("#lbPrev")){lbStep(-1);return;}
+  if(e.target.closest("#lbNext")){lbStep(1);return;}
+  if(e.target.closest("#lbImg")){const L=$("#lb"),st=$("#lbStage");L.classList.toggle("z");if(L.classList.contains("z")){st.scrollLeft=(st.scrollWidth-st.clientWidth)/2;st.scrollTop=(st.scrollHeight-st.clientHeight)/2}return;}
   const sz=e.target.closest("[data-sz]");
   if(sz){const art=sz.closest("article");sel[art.dataset.i]=sz.dataset.sz;art.querySelectorAll("[data-sz]").forEach(x=>x.setAttribute("aria-pressed",x===sz));}
   const ad=e.target.closest("[data-add]");
@@ -241,7 +278,9 @@ document.addEventListener("click",e=>{
   const f=e.target.closest("[data-f]");
   if(f){filter=f.dataset.f;document.querySelectorAll("[data-f]").forEach(b=>b.setAttribute("aria-pressed",b===f));render();}
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#panel").hidden){$("#panel").hidden=true;$("#openCart").focus();}});
+document.addEventListener("keydown",e=>{
+  if(!$("#lb").hidden){if(e.key==="Escape")lbClose();else if(e.key==="ArrowLeft")lbStep(-1);else if(e.key==="ArrowRight")lbStep(1);return;}
+  if(e.key==="Escape"&&!$("#panel").hidden){$("#panel").hidden=true;$("#openCart").focus();}});
 render();cartUI();
 </script>
 </body></html>
