@@ -259,7 +259,8 @@ const P=[
  {g:"w",b:"Frame",m:"The Easy Short",w:"Turbo",imgs:["img/w_frame_turbo_1.jpg","img/w_frame_turbo_2.jpg","img/w_frame_turbo_3.jpg"],c:"#a9c8e6",fit:"High waist, relaxed mid-thigh fit, 12 in rise",comp:"100% cotton (nonstretch)",extra:"Style OPTESH543. Inseam 5 in. Zip fly, five-pocket. Made in Mexico.",pm:1200,lista:"$198 USD",s:{27:2}}
 ];
 const $=s=>document.querySelector(s);
-let gender="all",brand="all",size="all",fopen=false;
+let FG=new Set(),FB=new Set(),FZ=new Set(),fopen=false;
+const okG=p=>!FG.size||FG.has(p.g),okB=p=>!FB.size||FB.has(p.b),okZ=ix=>!FZ.size||[...FZ].some(k=>sizeLeft(ix,k)>0);
 function setFopen(v){fopen=v;$("#fpanel").hidden=!v;const t=document.querySelector(".ftoggle");if(t)t.setAttribute("aria-expanded",v);}const sel={};let cart=[];
 const inCart=(i,k)=>cart.filter(c=>c.i==i&&c.k==k).length;
 const sz=k=>{const i=["XS","S","M","L","XL","XXL"].indexOf(k);return i>=0?1000+i:+k};
@@ -280,31 +281,34 @@ function cartUI(){
 }
 function copyText(t,ok){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(ok),()=>toast(fallback(t)?ok:"Could not copy"));}
 function renderControls(){
-  const byG=P.map((p,i)=>[p,i]).filter(([p])=>gender==="all"||p.g===gender);
+  const all=P.map((p,i)=>[p,i]);
+  const byG=all.filter(([p])=>okG(p));
   const brands=[...new Set(byG.map(([p])=>p.b))];
-  if(brand!=="all"&&!brands.includes(brand))brand="all";
-  const byGB=byG.filter(([p])=>brand==="all"||p.b===brand);
+  [...FB].forEach(b=>{if(!brands.includes(b))FB.delete(b)});
+  const byGB=byG.filter(([p])=>okB(p));
   const sizes=[...new Set(byGB.flatMap(([p,i])=>Object.keys(p.s).filter(k=>sizeLeft(i,k)>0)))].sort((a,b)=>sz(a)-sz(b));
-  if(size!=="all"&&!sizes.includes(size))size="all";
-  const chip=(key,val,label,cur)=>`<button type="button" data-${key}="${esc(val)}" aria-pressed="${cur===val}">${esc(label)}</button>`;
-  const grp=(name,label,key,items,cur)=>`<div class="fg"><span class="fl">${name}</span><div class="filters" role="group" aria-label="${label}">${chip(key,"all","All",cur)}${items.map(([v,l])=>chip(key,v,l,cur)).join("")}</div></div>`;
-  const act=[gender!=="all"?(gender==="m"?"Men":"Women"):"",brand!=="all"?brand:"",size!=="all"?"Size "+size:""].filter(Boolean);
-  $("#fhead").innerHTML=`${act.length?`<span class="fsum">${esc(act.join(" · "))}</span><button type="button" class="fclear" data-fclear>Clear</button>`:""}<button type="button" class="ftoggle" data-ftoggle aria-expanded="${fopen}" aria-controls="fpanel">Filters${act.length?` <span class="fcount">${act.length}</span>`:""}<span class="chev" aria-hidden="true"></span></button>`;
+  [...FZ].forEach(k=>{if(!sizes.includes(k))FZ.delete(k)});
+  if(FG.size>=2)FG.clear();if(brands.length>1&&FB.size>=brands.length)FB.clear();if(sizes.length>1&&FZ.size>=sizes.length)FZ.clear();
+  const chip=(key,val,label,on)=>`<button type="button" data-${key}="${esc(val)}" aria-pressed="${on}">${esc(label)}</button>`;
+  const grp=(name,label,key,items,cur)=>`<div class="fg"><span class="fl">${name}</span><div class="filters" role="group" aria-label="${label} (you can pick more than one)">${chip(key,"all","All",cur.size===0)}${items.map(([v,l])=>chip(key,v,l,cur.has(v))).join("")}</div></div>`;
+  const act=[...[...FG].map(g=>g==="m"?"Men":"Women"),...FB,...(FZ.size?["Size "+[...FZ].sort((a,b)=>sz(a)-sz(b)).join(", ")]:[])];
+  const nact=FG.size+FB.size+FZ.size;
+  $("#fhead").innerHTML=`${act.length?`<span class="fsum">${esc(act.join(" · "))}</span><button type="button" class="fclear" data-fclear>Clear</button>`:""}<button type="button" class="ftoggle" data-ftoggle aria-expanded="${fopen}" aria-controls="fpanel">Filters${nact?` <span class="fcount">${nact}</span>`:""}<span class="chev" aria-hidden="true"></span></button>`;
   $("#fpanel").hidden=!fopen;
-  $("#fpanel").innerHTML=grp("Shop","Filter by men or women","g",[["m","Men"],["w","Women"]],gender)+grp("Brand","Filter by brand","f",brands.map(b=>[b,b]),brand)+grp("Size","Filter by size","z",sizes.map(k=>[k,k]),size)+'<button type="button" class="fdone" data-ftoggle>Show results</button>';
+  $("#fpanel").innerHTML=grp("Shop","Filter by men or women","g",[["m","Men"],["w","Women"]],FG)+grp("Brand","Filter by brand","f",brands.map(b=>[b,b]),FB)+grp("Size","Filter by size","z",sizes.map(k=>[k,k]),FZ)+'<button type="button" class="fdone" data-ftoggle>Show results</button>';
 }
 function render(){
   renderControls();
-  const list=P.filter(p=>{const ix=P.indexOf(p);return (gender==="all"||p.g===gender)&&(brand==="all"||p.b===brand)&&(size==="all"||sizeLeft(ix,size)>0)});
-  const pcs=list.reduce((a,p)=>{const ix=P.indexOf(p);return a+(size==="all"?Object.keys(p.s).reduce((x,k)=>x+Math.max(0,sizeLeft(ix,k)),0):sizeLeft(ix,size))},0);
+  const list=P.filter(p=>okG(p)&&okB(p)&&okZ(P.indexOf(p)));
+  const pcs=list.reduce((a,p)=>{const ix=P.indexOf(p);return a+(!FZ.size?Object.keys(p.s).reduce((x,k)=>x+Math.max(0,sizeLeft(ix,k)),0):[...FZ].reduce((x,k)=>x+Math.max(0,sizeLeft(ix,k)),0))},0);
   $("#stats").textContent=list.length+(list.length==1?" style · ":" styles · ")+pcs+(pcs==1?" piece available":" pieces available");
   $(".fdone").textContent="Show "+list.length+(list.length==1?" style":" styles");
-  if(!list.length){$("#grid").innerHTML='<p class="nomatch">No pieces match these filters. Try another size or brand.</p>';return;}
+  if(!list.length){$("#grid").innerHTML='<p class="nomatch">No pieces match these filters. Try removing one.</p>';return;}
   $("#grid").innerHTML=list.map((p,i)=>{
     const id="f"+P.indexOf(p);
     const ix=P.indexOf(p);
-    if(size!=="all"&&sel[ix]===undefined&&sizeLeft(ix,size)>0)sel[ix]=size;
-    const sizes=Object.entries(p.s).map(([k,v])=>{const left=v-inCart(ix,k);return `<button type="button" class="sz${k===size?" hl":""}" data-sz="${k}" aria-pressed="${String(sel[ix])===k}" ${left<=0?"disabled":""} aria-label="Size ${k}, ${left<=0?"already in your cart":left+" in stock"}"><b>${k}</b><span>${left<=0?"in cart":left+" left"}</span></button>`}).join("");
+    if(FZ.size&&sel[ix]===undefined){const f=[...FZ].sort((a,b)=>sz(a)-sz(b)).find(k=>sizeLeft(ix,k)>0);if(f!==undefined)sel[ix]=f}
+    const sizes=Object.entries(p.s).map(([k,v])=>{const left=v-inCart(ix,k);return `<button type="button" class="sz${FZ.has(k)?" hl":""}" data-sz="${k}" aria-pressed="${String(sel[ix])===k}" ${left<=0?"disabled":""} aria-label="Size ${k}, ${left<=0?"already in your cart":left+" in stock"}"><b>${k}</b><span>${left<=0?"in cart":left+" left"}</span></button>`}).join("");
     return `<article data-i="${P.indexOf(p)}">
       <div class="gal"><div class="photo"${p.ar?` style="aspect-ratio:${p.ar}"`:""}><img alt="${esc(p.m)}, ${esc(p.w)}${p.nw?"":" wash"}" src="${p.imgs[0]}" data-main decoding="async"${i<2?"":" loading=\"lazy\""}><button type="button" class="zoom" data-zoom aria-label="Enlarge photo of ${esc(p.m)}"><span class="zb">Zoom</span></button></div>
         <div class="thumbs">${p.imgs.map((s,k)=>`<button type="button" class="th" data-th="${k}"${p.ar?` style="aspect-ratio:${p.ar}"`:""} aria-label="View photo ${k+1} of ${p.imgs.length}" aria-pressed="${k===0}"><img alt="" src="${s.replace("img/","img/t/")}" loading="lazy" decoding="async"></button>`).join("")}</div></div>
@@ -352,10 +356,11 @@ document.addEventListener("click",e=>{
   if(th){const art=th.closest("article");const p=P[art.dataset.i];art.querySelector("[data-main]").src=p.imgs[th.dataset.th];art.querySelectorAll("[data-th]").forEach(x=>x.setAttribute("aria-pressed",x===th));}
   if(e.target.closest("[data-ftoggle]")){setFopen(!fopen);const t=document.querySelector(".ftoggle");if(t)t.focus({preventScroll:true});return;}
   if(fopen&&!e.target.closest("#topbar"))setFopen(false);
-  if(e.target.closest("[data-fclear]")){gender="all";brand="all";size="all";render();const t=document.querySelector("[data-ftoggle]");if(t)t.focus({preventScroll:true});return;}
+  if(e.target.closest("[data-fclear]")){FG.clear();FB.clear();FZ.clear();render();const t=document.querySelector("[data-ftoggle]");if(t)t.focus({preventScroll:true});return;}
   const fb=e.target.closest("[data-g],[data-f],[data-z]");
   if(fb){const key=fb.dataset.g!==undefined?"g":fb.dataset.f!==undefined?"f":"z",val=fb.dataset[key];
-    if(key==="g")gender=val;else if(key==="f")brand=val;else size=val;
+    const S=key==="g"?FG:key==="f"?FB:FZ;
+    if(val==="all")S.clear();else if(S.has(val))S.delete(val);else S.add(val);
     render();const nb=document.querySelector(`[data-${key}="${CSS.escape(val)}"]`);if(nb)nb.focus({preventScroll:true});}
 });
 document.addEventListener("keydown",e=>{
