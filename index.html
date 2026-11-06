@@ -113,7 +113,12 @@ footer img{width:110px;height:auto}
   body{font-size:16px;padding-top:14px}
   .wrap{gap:18px}
   header{padding:6px 0 20px}
-  .logo{width:min(82%,320px)}
+  .logo{width:min(62%,240px)}
+  .slogan{font-size:clamp(15px,4.3vw,20px);letter-spacing:.05em}
+  header{gap:10px}
+  header p.lead{font-size:15px;line-height:1.4}
+  .how{display:none}
+  .stats{margin-top:-6px}
   .grid{grid-template-columns:1fr;gap:20px}
   .body{padding:16px 16px 18px;gap:14px}
   h2{font-size:32px}
@@ -153,6 +158,16 @@ footer img{width:110px;height:auto}
 .fg{display:flex;align-items:center;gap:12px}
 .fl{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:52px}
 .sz.hl{outline:2px solid var(--stitch);outline-offset:2px}
+.fhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ftoggle{font:inherit;font-weight:600;min-height:48px;padding:10px 18px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:4px;display:inline-flex;gap:10px;align-items:center;cursor:pointer}
+.ftoggle:focus-visible,.fclear:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
+.fcount{background:var(--stitch);color:var(--stitch-ink);border-radius:999px;padding:1px 9px;font-size:14px;font-weight:700}
+.chev{width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-4px 0 0 4px;transition:transform .15s}
+.ftoggle[aria-expanded="true"] .chev{transform:rotate(225deg);margin-top:4px}
+.fsum{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.fclear{font:inherit;background:none;border:0;color:var(--stitch-text);text-decoration:underline;cursor:pointer;min-height:44px;padding:0 6px}
+.fpanel{display:flex;flex-direction:column;gap:12px}
+.fpanel[hidden]{display:none}
 .nomatch{grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 0;font-size:17px}
 @media (max-width:640px){
   .fg{flex-direction:column;align-items:stretch;gap:6px}
@@ -167,7 +182,7 @@ footer img{width:110px;height:auto}
     <h1 class="sr">ORIGIN: brand-name clothing, direct from the source</h1>
     <img class="logo" src="logo.png" alt="ORIGIN" width="900" height="216">
     <p class="slogan">Same origin, different price.</p>
-    <p class="lead">Brand-name clothing, direct from the source. Choose your size, add your jeans to the cart and copy the message to reserve them on WhatsApp or Instagram.</p>
+    <p class="lead">Brand-name clothing, direct from the source. <span class="how">Choose your size, add your jeans to the cart and copy the message to reserve them on WhatsApp or Instagram.</span></p>
   </header>
 
   <div class="bar">
@@ -224,7 +239,7 @@ const P=[
  {g:"w",b:"Frame",m:"The Easy Short",w:"Turbo",imgs:["img/w_frame_turbo_1.jpg","img/w_frame_turbo_2.jpg","img/w_frame_turbo_3.jpg"],c:"#a9c8e6",fit:"High waist, relaxed mid-thigh fit, 12 in rise",comp:"100% cotton (nonstretch)",extra:"Style OPTESH543. Inseam 5 in. Zip fly, five-pocket. Made in Mexico.",pm:1200,lista:"$198 USD",s:{27:2}}
 ];
 const $=s=>document.querySelector(s);
-let gender="all",brand="all",size="all";const sel={};let cart=[];
+let gender="all",brand="all",size="all",fopen=false;const sel={};let cart=[];
 const inCart=(i,k)=>cart.filter(c=>c.i==i&&c.k==k).length;
 const sizeLeft=(ix,k)=>(P[ix].s[k]||0)-inCart(ix,k);
 const price=b=>b==="Frame"?1500:1200;
@@ -251,7 +266,8 @@ function renderControls(){
   if(size!=="all"&&!sizes.includes(size))size="all";
   const chip=(key,val,label,cur)=>`<button type="button" data-${key}="${esc(val)}" aria-pressed="${cur===val}">${esc(label)}</button>`;
   const grp=(name,label,key,items,cur)=>`<div class="fg"><span class="fl">${name}</span><div class="filters" role="group" aria-label="${label}">${chip(key,"all","All",cur)}${items.map(([v,l])=>chip(key,v,l,cur)).join("")}</div></div>`;
-  $("#controls").innerHTML=grp("Shop","Filter by men or women","g",[["m","Men"],["w","Women"]],gender)+grp("Brand","Filter by brand","f",brands.map(b=>[b,b]),brand)+grp("Size","Filter by size","z",sizes.map(k=>[k,k]),size);
+  const act=[gender!=="all"?(gender==="m"?"Men":"Women"):"",brand!=="all"?brand:"",size!=="all"?"Size "+size:""].filter(Boolean);
+  $("#controls").innerHTML=`<div class="fhead"><button type="button" class="ftoggle" data-ftoggle aria-expanded="${fopen}" aria-controls="fpanel">Filters${act.length?` <span class="fcount">${act.length}</span>`:""}<span class="chev" aria-hidden="true"></span></button>${act.length?`<span class="fsum">${esc(act.join(" · "))}</span><button type="button" class="fclear" data-fclear>Clear</button>`:""}</div><div id="fpanel" class="fpanel"${fopen?"":" hidden"}>`+grp("Shop","Filter by men or women","g",[["m","Men"],["w","Women"]],gender)+grp("Brand","Filter by brand","f",brands.map(b=>[b,b]),brand)+grp("Size","Filter by size","z",sizes.map(k=>[k,k]),size)+"</div>";
 }
 function render(){
   renderControls();
@@ -309,6 +325,8 @@ document.addEventListener("click",e=>{
   if(e.target.closest("#copyMsg")&&cart.length){copyText(msg(),"Message copied. Paste it in WhatsApp or Instagram");}
   const th=e.target.closest("[data-th]");
   if(th){const art=th.closest("article");const p=P[art.dataset.i];art.querySelector("[data-main]").src=p.imgs[th.dataset.th];art.querySelectorAll("[data-th]").forEach(x=>x.setAttribute("aria-pressed",x===th));}
+  if(e.target.closest("[data-ftoggle]")){fopen=!fopen;render();const t=document.querySelector("[data-ftoggle]");if(t)t.focus({preventScroll:true});return;}
+  if(e.target.closest("[data-fclear]")){gender="all";brand="all";size="all";render();const t=document.querySelector("[data-ftoggle]");if(t)t.focus({preventScroll:true});return;}
   const fb=e.target.closest("[data-g],[data-f],[data-z]");
   if(fb){const key=fb.dataset.g!==undefined?"g":fb.dataset.f!==undefined?"f":"z",val=fb.dataset[key];
     if(key==="g")gender=val;else if(key==="f")brand=val;else size=val;
